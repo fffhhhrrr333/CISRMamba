@@ -30,13 +30,13 @@ The four letters of **CISR** map one-to-one to the core contributions 👇
   ### Option 2: Download from command line
 
   wget
-  ```bash
   wget https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
 
   curl
   curl -L -o CISRMamba_scratch_CISRMamba_best.pt \
     https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
-  
+
+
 ## 📁 1. Directory layout
 
 ```
