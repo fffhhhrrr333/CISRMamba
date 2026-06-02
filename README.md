@@ -16,7 +16,17 @@ The four letters of **CISR** map one-to-one to the core contributions 👇
 | 🧭 **R** | **R**outing | DeformableScanRouter — learns per-scale offsets that steer SS4D scans |
 
 ---
+## Pretrained Weights
 
+  The model weights are published on the [Releases](https://github.com/fffhhhrrr333/CISRMamba/releases) page (~210 MB).
+
+  File: `CISRMamba_scratch_CISRMamba_best.pt`
+
+  ### Option 1: Download in browser
+  Click the link below:
+
+  https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
+  
 ## 📁 1. Directory layout
 
 ```
