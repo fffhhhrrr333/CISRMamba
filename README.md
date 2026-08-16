@@ -14,7 +14,7 @@ flood-inundation mapping from co-registered optical and SAR observations.
 
 </div>
 
-## Overview
+## 🔎 Overview
 
 CISRMamba addresses two recurring challenges in optical--SAR fusion: spatially varying
 cross-modal reliability and the difficulty of tracing irregular flood boundaries with fixed
@@ -25,7 +25,16 @@ scan patterns. The network combines four components:
 - **Refined Feature Integration (RFI):** combines spatial gating, channel recalibration, and a cross-modal difference residual.
 - **Spectral Refinement Block (SRB):** restores high-frequency boundary details with wavelet-domain refinement.
 
-## Architecture
+The name **CISR** summarizes the central design:
+
+| Initial | Principle | Implementation |
+|:--:|:--|:--|
+| **C** | Cross-modal | FCM performs region-dependent routing between optical and SAR features. |
+| **I** | Interaction | RFI preserves complementary information while limiting modality dominance. |
+| **S** | Scan | SS4D provides four-directional state-space context modeling. |
+| **R** | Routing | DSR learns spatial offsets that steer the scan toward irregular structures. |
+
+## 🧩 Architecture
 
 <p align="center">
   <img src="https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/cisrmamba_architecture.png" width="100%" alt="Overall architecture of CISRMamba">
@@ -36,7 +45,16 @@ four-stage encoders. DSR precedes the state-space scan at each scale; FCM and RF
 perform region-dependent cross-modal fusion. A progressive decoder and the final SRB
 produce the binary flood map.
 
-## Results
+| Component | Location | Role |
+|:--|:--|:--|
+| `VSSEncoder` | `backbone.py`, `encoder.py` | Four-scale optical and SAR feature extraction. |
+| `DeformableScanRouter` | `backbone.py` | Content-adaptive feature warping before state-space scanning. |
+| `FCM` | `CISRMamba.py` | Enhancement, complementation, and discrepancy-suppression routing. |
+| `RFI` | `CISRMamba.py` | Spatial and channel recalibration with a difference-guided residual. |
+| `SRB` / `SFE` | `CISRMamba.py` | Wavelet- and frequency-domain boundary refinement. |
+| `AlignDecoderBlock` | `CISRMamba.py` | Progressive alignment and decoding of multi-scale features. |
+
+## 📊 Results
 
 ### Quantitative comparison
 
@@ -104,13 +122,20 @@ not use augmentation.
 > CISRMamba assumes that each optical--SAR pair already covers the same geographic extent
 > and has been registered to a common grid. The model does not perform image registration.
 
-## Pretrained weights
+## 📦 Pretrained weights
 
 Download `CISRMamba_scratch_CISRMamba_best.pt` from the
 [GitHub release](https://github.com/fffhhhrrr333/CISRMamba/releases/tag/1):
 
 ```bash
 wget https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
+```
+
+Alternatively, use `curl`:
+
+```bash
+curl -L -o CISRMamba_scratch_CISRMamba_best.pt \
+  https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
 ```
 
 The released checkpoint was trained from scratch; no external pretrained weights were used.
@@ -131,9 +156,27 @@ equal weight to binary cross-entropy and Dice losses:
 L_total = 0.5 * L_BCE + 0.5 * L_Dice
 ```
 
+During training, the code:
+
+- uses a fixed random seed of 42;
+- saves `last_model.pt` after every epoch;
+- saves `CISRMamba_scratch_CISRMamba_best.pt` whenever mIoU improves; and
+- records losses and segmentation metrics in the CSV path specified by `METRICS_CSV`.
+
 ## Evaluation
 
-Set `CHECKPOINT_PATH` and the test-data paths in `test.py`, then run:
+Set the checkpoint, test-data, visualization, and CSV paths at the top of `test.py`:
+
+```python
+CHECKPOINT_PATH = "/CISRMamba/final2/CISRMamba_scratch_CISRMamba_best.pt"
+TEST_OPT_DIR = "/test/opt"
+TEST_SAR_DIR = "/test/vv"
+TEST_LBL_DIR = "/test/flood_vv"
+RESULT_IMG_PATH = "/path/to/visualization.png"
+CSV_SAVE_PATH = "test_results_standalone.csv"
+```
+
+Then run:
 
 ```bash
 python test.py
