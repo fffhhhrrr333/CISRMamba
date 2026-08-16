@@ -158,7 +158,6 @@ L_total = 0.5 * L_BCE + 0.5 * L_Dice
 
 During training, the code:
 
-- uses a fixed random seed of 42;
 - saves `last_model.pt` after every epoch;
 - saves `CISRMamba_scratch_CISRMamba_best.pt` whenever mIoU improves; and
 - records losses and segmentation metrics in the CSV path specified by `METRICS_CSV`.
