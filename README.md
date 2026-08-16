@@ -1,71 +1,79 @@
-# 🌊 CISRMamba
+<div align="center">
 
-> **CISRMamba: Cross-modal Interaction and Scan Routing Mamba for Optical-SAR Flood Detection**
+# CISRMamba
 
-✨ A dual-stream Mamba network for **flood / water-body segmentation** from
-co-registered **optical (4-channel)** and **SAR (1-channel, VV)** Sentinel
-imagery.
+### Cross-Modal Interaction and Scan-Routing Mamba for Multi-Sensor Flood Inundation Mapping
 
-The four letters of **CISR** map one-to-one to the core contributions 👇
+[![Python](https://img.shields.io/badge/Python-3.8-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![CUDA](https://img.shields.io/badge/CUDA-11.8-76B900?logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
+[![Weights](https://img.shields.io/badge/Model-Weights-4C8BF5)](https://github.com/fffhhhrrr333/CISRMamba/releases/tag/1)
 
-| Letter | Expansion | Module |
-|--------|-----------|--------|
-| 🔀 **C** | **C**ross-modal | FCM — three-way (enhance / complement / discard) gate over optical ↔ SAR |
-| 🔗 **I** | **I**nteraction | RFI — spatial gate + SE channel recalibration + cross-modal diff residual |
-| 🌀 **S** | **S**can | SS4D — 4-directional state-space scanning |
-| 🧭 **R** | **R**outing | DeformableScanRouter — learns per-scale offsets that steer SS4D scans |
+Official PyTorch implementation of **CISRMamba**, a dual-stream state-space model for
+flood-inundation mapping from co-registered optical and SAR observations.
 
----
-## Pretrained Weights
+</div>
 
-  The model weights are published on the [Releases](https://github.com/fffhhhrrr333/CISRMamba/releases) page (~210 MB).
+## Overview
 
-  File: `CISRMamba_scratch_CISRMamba_best.pt`
+CISRMamba addresses two recurring challenges in optical--SAR fusion: spatially varying
+cross-modal reliability and the difficulty of tracing irregular flood boundaries with fixed
+scan patterns. The network combines four components:
 
-  ### Option 1: Download in browser
-  Click the link below:
+- **Deformable Scan Router (DSR):** adapts state-space scan trajectories to irregular flood contours.
+- **Feature Complementary Module (FCM):** routes local responses through enhancement, complementation, or discrepancy suppression.
+- **Refined Feature Integration (RFI):** combines spatial gating, channel recalibration, and a cross-modal difference residual.
+- **Spectral Refinement Block (SRB):** restores high-frequency boundary details with wavelet-domain refinement.
 
-  https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
+## Architecture
 
-  ### Option 2: Download from command line
+<p align="center">
+  <img src="https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/cisrmamba_architecture.png" width="100%" alt="Overall architecture of CISRMamba">
+</p>
 
-  wget
-  wget https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
+The optical and SAR streams use structurally identical but independently parameterized
+four-stage encoders. DSR precedes the state-space scan at each scale; FCM and RFI then
+perform region-dependent cross-modal fusion. A progressive decoder and the final SRB
+produce the binary flood map.
 
-  curl
-  curl -L -o CISRMamba_scratch_CISRMamba_best.pt \
-    https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
+## Results
 
+### Quantitative comparison
 
-## 📁 1. Directory layout
+The following results are reported in the paper. All values are percentages.
 
-```
-code/
-├── 🧠 CISRMamba.py        # Main model: dual-stream backbone + FCM + RFI + decoder
-├── 🦎 backbone.py         # MobileMamba / VSS encoder with deformable scan routing
-├── 🔌 encoder.py          # Thin wrapper that exposes `VSSEncoder`
-├── 📦 lib_mamba/          # Mamba SSM primitives (SS2D/SS4D, selective scan, CSM kernels)
-├── 🗂️  dataloaded.py       # CustomDataset (4-ch opt + 1-ch SAR + binary mask)
-├── ⚙️  config.py           # Hyper-parameters and dataset / checkpoint paths
-├── 🧰 util.py             # train_fn / eval_fn, metrics, visualization helpers
-├── 📉 loss.py             # Dice + BCE loss
-├── 📏 evaluate.py         # Stand-alone metric functions (Acc / Sens / Spec / ...)
-├── 🏋️  train.py            # Training entry point
-├── 🧪 test.py             # Evaluation entry point (metrics + 1 sample vis)
-├── 🖼️  picture.py          # Batch inference: save a prediction mask per test image
-├── 📜 requirements.txt
-└── 📖 README.md
-```
+| Dataset | mIoU | Accuracy | F1 | Precision | Recall |
+|:--|--:|--:|--:|--:|--:|
+| CAU-Flood | **91.53** | **97.81** | **95.47** | **95.23** | **95.73** |
+| Wuhan | **58.67** | **87.67** | **70.65** | **72.89** | **68.56** |
 
----
+On CAU-Flood, CISRMamba also obtains **86.03% Water IoU**. The complete model contains
+**53.51 M parameters** and requires **13.95 GMACs** for a 256 x 256 input pair.
 
-## 🛠️ 2. Environment
+### Qualitative comparison on CAU-Flood
 
-- 🐍 Python 3.8
-- 🟢 CUDA 11.8, NVIDIA GPU with ≥ 8 GB memory (tested on a single RTX 3090)
-- 🐧 Linux (Ubuntu 20.04) — Mamba kernels require Linux + CUDA
+<p align="center">
+  <img src="https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/cau_flood_qualitative_results.png" width="82%" alt="Qualitative comparison on the CAU-Flood dataset">
+</p>
 
-Install with 👇
+The red boxes highlight narrow channels, isolated water bodies, and regions with strong
+background interference. White and black denote true positives and true negatives;
+blue and magenta denote false positives and false negatives, respectively.
+
+### Component ablation on CAU-Flood
+
+<p align="center">
+  <img src="https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/cau_flood_ablation.png" width="100%" alt="Qualitative component ablation on the CAU-Flood dataset">
+</p>
+
+Each row shows the optical image, SAR image, ground truth, four single-component-removal
+variants, and the complete model. Differences are concentrated around narrow channels,
+curved water--land boundaries, and isolated flood patches.
+
+## Installation
+
+The reference environment uses Python 3.8, PyTorch 2.0.0, and CUDA 11.8 on Linux.
+A CUDA-capable GPU is required by the selective-scan kernels.
 
 ```bash
 conda create -n cisrmamba python=3.8 -y
@@ -73,108 +81,100 @@ conda activate cisrmamba
 pip install -r requirements.txt
 ```
 
-> ⚠️ `mamba-ssm==1.1.1` and `causal-conv1d==1.1.1` contain pre-built CUDA
-> extensions. If pip cannot find a matching wheel for your platform you may
-> need to `pip install --no-build-isolation` and ensure `nvcc` / `CUDA_HOME`
-> are set.
+If a compatible wheel is unavailable for `mamba-ssm` or `causal-conv1d`, install the
+packages against the local CUDA toolkit with build isolation disabled.
 
----
+## Data preparation
 
-## 🗃️ 3. Dataset layout
+The data loader expects co-registered optical images, SAR images, and binary masks to
+share the same filename:
 
-The provided `CustomDataset` expects the three modalities to share the **same
-filename** across three folders:
-
-```
-<root>/
-├── 🌈 opt/        # 4-channel optical (e.g. B-G-R-NIR), 8-bit or 16-bit
-├── 📡 vv/         # 1-channel SAR VV
-└── 💧 flood_vv/   # binary flood mask (0 / 255)
+```text
+<dataset-root>/
+|-- opt/       # four-channel optical images
+|-- vv/        # single-channel SAR images
+`-- flood_vv/  # binary masks
 ```
 
-🧭 Configure training / test roots in `config.py` (`OPTICAL_DIR`, `RADAR_DIR`,
-`LABEL_DIR`) and in `test.py` / `picture.py` (`TEST_OPT_DIR`, `TEST_SAR_DIR`,
-`TEST_LBL_DIR`).
+Set `OPTICAL_DIR`, `RADAR_DIR`, and `LABEL_DIR` in `config.py`. Inputs are converted to
+floating point, scaled from 0--255 to 0--1, and resized to 256 x 256. The training pipeline
+applies independent horizontal and vertical flips with probability 0.5; validation does
+not use augmentation.
 
-📐 All images are resized to `height × width = 256 × 256` by the Albumentations
-pipeline before being concatenated into a 5-channel tensor.
+> CISRMamba assumes that each optical--SAR pair already covers the same geographic extent
+> and has been registered to a common grid. The model does not perform image registration.
 
----
+## Pretrained weights
 
-## 🏋️ 4. Training
+Download `CISRMamba_scratch_CISRMamba_best.pt` from the
+[GitHub release](https://github.com/fffhhhrrr333/CISRMamba/releases/tag/1):
 
-Edit `config.py` as needed (`EPOCHS`, `BATCH_SIZE`, `LR`, paths), then 🚀
+```bash
+wget https://github.com/fffhhhrrr333/CISRMamba/releases/download/1/CISRMamba_scratch_CISRMamba_best.pt
+```
+
+The released checkpoint was trained from scratch; no external pretrained weights were used.
+
+## Training
+
+Configure the dataset and output paths in `config.py`, then run:
 
 ```bash
 python train.py
 ```
 
-The script:
+The reference configuration uses 60 epochs, batch size 16, AdamW with an initial learning
+rate of `1e-4` and weight decay `0.01`, and cosine annealing to `1e-6`. The objective gives
+equal weight to binary cross-entropy and Dice losses:
 
-- ✂️ Splits the dataset 80 / 20 with a fixed seed (42) for train / val
-- ⚡ Optimizer: **AdamW** (`lr=1e-4`, `weight_decay=0.01`)
-- 🌀 Scheduler: **CosineAnnealingLR** (`T_max=EPOCHS`, `eta_min=1e-6`)
-- 🎯 Loss: Dice + BCE-with-logits (computed inside `CISRMamba.forward`)
-- 💾 Saves `last_model.pt` every epoch and `CISRMamba_scratch_CISRMamba_best.pt`
-  whenever mIoU improves, to `CHECKPOINT_DIR`
-- 📊 Logs per-epoch metrics (mIoU / F1 / Acc / Prec / Recall / Kappa) to
-  `METRICS_CSV`
+```text
+L_total = 0.5 * L_BCE + 0.5 * L_Dice
+```
 
----
+## Evaluation
 
-## 🧪 5. Evaluation
-
-`test.py` computes the full metric set on a separate test directory and also
-reports **params / GFLOPs** (requires `thop`). 📏
+Set `CHECKPOINT_PATH` and the test-data paths in `test.py`, then run:
 
 ```bash
 python test.py
 ```
 
-🔧 Adjust the paths at the top of `test.py`:
+The script reports mIoU, accuracy, F1, precision, recall, parameter count, and computational
+cost, and saves the evaluation summary to CSV.
 
-```python
-CHECKPOINT_PATH = "/CISRMamba/final/CISRMamba_scratch_CISRMamba_best.pt"
-TEST_OPT_DIR    = "/test/opt"
-TEST_SAR_DIR    = "/test/vv"
-TEST_LBL_DIR    = "/test/flood_vv"
+## Repository structure
+
+```text
+.
+|-- CISRMamba.py      # network, cross-modal modules, and decoder
+|-- backbone.py       # MobileMamba encoder and deformable scan routing
+|-- encoder.py        # encoder wrapper
+|-- lib_mamba/        # selective-scan and state-space building blocks
+|-- dataloaded.py     # paired optical--SAR dataset pipeline
+|-- loss.py           # equally weighted BCE--Dice objective
+|-- train.py          # training entry point
+|-- test.py           # evaluation entry point
+|-- evaluate.py       # segmentation metrics
+|-- util.py           # training and evaluation utilities
+|-- config.py         # experiment configuration
+`-- requirements.txt  # Python dependencies
 ```
 
----
+## Citation
 
-## 🖼️ 6. Exporting prediction masks
+If this work is useful in your research, please cite the paper. The final BibTeX entry and
+DOI will be added after publication.
 
-`picture.py` runs inference over **every** test sample and saves a binary PNG
-(0 / 255) per image, reusing the original filename:
-
-```bash
-python picture.py
+```bibtex
+@article{feng2026cisrmamba,
+  title   = {CISRMamba: Cross-Modal Interaction and Scan-Routing Mamba for Multi-Sensor Flood Inundation Mapping},
+  author  = {Feng, Haoran and Xiao, Chenyang and Lin, Ruiyang and Chen, Yuxuan and Liang, Linxing and Lin, Bin},
+  journal = {Sensors},
+  year    = {2026}
+}
 ```
 
-📤 Output directory: `RESULT_IMG_DIR = "/root/autodl-tmp/test_result"` (edit at
-the top of the file).
+## Acknowledgements
 
----
-
-## 🧩 7. Key modules
-
-| 🧱 Module | 📄 File | 🎯 Role |
-|--------|------|------|
-| 🦎 `VSSEncoder` / `MobileMambaEncoder` | `backbone.py`, `encoder.py` | Hierarchical Mamba encoder, 4 scales, dims `[96, 192, 384, 768]`, with **DeformableScanRouter** controlling **SS4D** |
-| 🔀 `FCM` | `CISRMamba.py` | Three-way gate (enhance / complement / discard) over optical ↔ SAR, with bidirectional cross-attention on spatially reduced keys/values |
-| 🔗 `RFI` | `CISRMamba.py` | Spatial gate + SE channel recalibration + cross-modal diff residual |
-| 🎛️ `CEB` | `CISRMamba.py` | Channel Enhanced Block used inside `ResBlock_CBAM` |
-| 🌊 `SRB` / `SFE` | `CISRMamba.py` | Haar DWT + FreMLP (magnitude / phase) refinement at the final decoder output |
-| 🧭 `AlignDecoderBlock` + `CAB` | `CISRMamba.py` | Deformation-aware decoder that aligns low- and high-level features via learned offsets |
-
----
-
-## 📚 8. Citation / acknowledgement
-
-🙏 This code builds on the **MobileMamba / SegMAN** backbone and on
-`segmentation-models-pytorch` for the Dice loss. Please cite the respective
-works if you use this repository in your research.
-
----
-
-<p align="center">⭐ If this repo helps your work, please give it a star! ⭐</p>
+This implementation builds on MobileMamba and `segmentation-models-pytorch`. We thank
+the authors of the associated open-source projects and datasets.

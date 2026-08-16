@@ -28,7 +28,7 @@ class DiceBCELoss(nn.Module):
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)
         loss = torch.nn.BCELoss()
         BCE = loss(inputs, targets)
-        Dice_BCE = BCE + dice_loss
+        Dice_BCE = 0.5 * BCE + 0.5 * dice_loss
 
         return Dice_BCE
 
