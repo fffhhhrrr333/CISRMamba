@@ -12,6 +12,10 @@
 Official PyTorch implementation of **CISRMamba**, a dual-stream state-space model for
 flood-inundation mapping from co-registered optical and SAR observations.
 
+[Overview](#-overview) &nbsp;·&nbsp; [Architecture](#-architecture) &nbsp;·&nbsp;
+[Results](#-results) &nbsp;·&nbsp; [Installation](#installation) &nbsp;·&nbsp;
+[Weights](#-pretrained-weights) &nbsp;·&nbsp; [Evaluation](#evaluation)
+
 </div>
 
 ## 🔎 Overview
@@ -29,10 +33,10 @@ The name **CISR** summarizes the central design:
 
 | Initial | Principle | Implementation |
 |:--:|:--|:--|
-| **C** | Cross-modal | FCM performs region-dependent routing between optical and SAR features. |
-| **I** | Interaction | RFI preserves complementary information while limiting modality dominance. |
-| **S** | Scan | SS4D provides four-directional state-space context modeling. |
-| **R** | Routing | DSR learns spatial offsets that steer the scan toward irregular structures. |
+| 🔀 **C** | Cross-modal | FCM performs region-dependent routing between optical and SAR features. |
+| 🔗 **I** | Interaction | RFI preserves complementary information while limiting modality dominance. |
+| 🌀 **S** | Scan | SS4D provides four-directional state-space context modeling. |
+| 🧭 **R** | Routing | DSR learns spatial offsets that steer the scan toward irregular structures. |
 
 ## 🧩 Architecture
 
@@ -44,6 +48,8 @@ The optical and SAR streams use structurally identical but independently paramet
 four-stage encoders. DSR precedes the state-space scan at each scale; FCM and RFI then
 perform region-dependent cross-modal fusion. A progressive decoder and the final SRB
 produce the binary flood map.
+
+### Key components
 
 | Component | Location | Role |
 |:--|:--|:--|
@@ -119,6 +125,7 @@ floating point, scaled from 0--255 to 0--1, and resized to 256 x 256. The traini
 applies independent horizontal and vertical flips with probability 0.5; validation does
 not use augmentation.
 
+> [!IMPORTANT]
 > CISRMamba assumes that each optical--SAR pair already covers the same geographic extent
 > and has been registered to a common grid. The model does not perform image registration.
 
@@ -200,20 +207,6 @@ cost, and saves the evaluation summary to CSV.
 |-- util.py           # training and evaluation utilities
 |-- config.py         # experiment configuration
 `-- requirements.txt  # Python dependencies
-```
-
-## Citation
-
-If this work is useful in your research, please cite the paper. The final BibTeX entry and
-DOI will be added after publication.
-
-```bibtex
-@article{feng2026cisrmamba,
-  title   = {CISRMamba: Cross-Modal Interaction and Scan-Routing Mamba for Multi-Sensor Flood Inundation Mapping},
-  author  = {Feng, Haoran and Xiao, Chenyang and Lin, Ruiyang and Chen, Yuxuan and Liang, Linxing and Lin, Bin},
-  journal = {Sensors},
-  year    = {2026}
-}
 ```
 
 ## Acknowledgements
