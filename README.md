@@ -131,6 +131,8 @@ not use augmentation.
 
 ## 📦 Pretrained weights
 
+We have trained improved model weights that achieve a higher mIoU than the results reported in the paper.
+
 Download `CISRMamba_scratch_CISRMamba_best.pt` from the
 [GitHub release](https://github.com/fffhhhrrr333/CISRMamba/releases/tag/1):
 
